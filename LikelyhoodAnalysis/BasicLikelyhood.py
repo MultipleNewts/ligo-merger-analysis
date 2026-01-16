@@ -11,14 +11,14 @@ rnd_object = np.random.default_rng(seed=time_seed)
 # Define Parameters
 t_start = 0
 t_end = 200
-sample_rate = 300
+sample_rate = 30
 N = np.int32((t_end-t_start) * sample_rate)
 
 noise_mean = 0
 noise_std = 1
 
-signal_wavenumber = 2 * np.pi * 100
-signal_width = 2
+signal_wavenumber = 2 * np.pi / 0.3
+signal_width = 1
 signal_amplitude = 1
 
 
@@ -51,6 +51,8 @@ plt.show()
 # %%
 log_likelihood = np.zeros(N)
 for i in range(0, N):
+    if (i % 1000 == 0):
+        print(f"{(i/N*100):.3}%")
     log_likelihood[i] = -np.sum(np.power((data-model(times, times[i])), 2))
     # log_likelihood[i] = -np.sum(np.power((noise), 2))
 
@@ -62,4 +64,6 @@ plt.legend()
 plt.show()
 
 
+# %%
+print(10000 / (t_end-t_start))
 # %%
