@@ -99,3 +99,34 @@ class WhiteNoise:
     # Access Noise Data
     def get_noise(self):
         return self.array
+
+
+# Define Pink (Fractional) Noise
+class PinkNoise(WhiteNoise):
+    def __init__(self, num, mean, std, samplerate=16000):
+        super().__init__(num, mean, std, samplerate)
+        self.label = "Pink Noise"
+
+    def gen_noise(self, num):
+        self.array = rnd_object.normal(self.mean, self.std, num)
+        FFT_data = np.fft.fft(self.array)[1:]
+        FFT_freqs = np.fft.fftfreq(self.get_len(), 1/self.get_samplerate())[1:]
+        plt.plot(FFT_freqs, FFT_data)
+        plt.show()
+        print(".,.,.,")
+        temp = []
+        for val, f in zip(FFT_data, FFT_freqs):
+            temp.append(val/np.emath.sqrt(f))
+        plt.plot(FFT_freqs, temp)
+        plt.show()
+        print("<><><><><><")
+        self.array = np.fft.ifft(temp)
+
+
+WN = WhiteNoise(10000, 0, 1, 4000)
+PN = PinkNoise(10000, 0, 1, 4000)
+WN.FFT_Freqs()
+PN.FFT_Freqs()
+WN.plot_raw()
+PN.plot_raw()
+
