@@ -51,6 +51,31 @@ class WhiteNoise:
         plt.title(self.label + " Distribution")
         plt.show()
 
+    # Plots amplitudes of frequencies present
+    def FFT_Freqs(self):
+        freqs = np.fft.fftfreq(self.get_len(), 1/self.get_samplerate())
+        FFT_data = np.fft.fft(self.array)
+        freqs = self.trim_freqs(freqs)
+        FFT_data = self.trim_freqs(FFT_data)
+        plt.plot(freqs, np.log10(np.abs(FFT_data)**2))
+        plt.xscale("log")
+        plt.xlabel(r"Frequency/$Hz$")
+        plt.ylabel("Amplitude")
+        plt.title(self.label + "FFT Frequency Distribution")
+        plt.grid()
+        plt.grid(which="minor")
+        plt.show()
+
+    # Trims FFT frequencies according to Nyquist-Shannon Sampling
+    def trim_freqs(self, data):
+        L = len(data)
+        if L % 2 == 0:
+            data = data[:int(L/2)]
+        else:
+            data = data[:int((L+1)/2)]
+        return data
+
+    # Get/Set Methods for Attributes
     def get_mean(self):
         return self.mean
 
