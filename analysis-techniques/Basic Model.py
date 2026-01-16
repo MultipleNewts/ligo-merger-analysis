@@ -63,5 +63,6 @@ plt.show()
 fig, axes = plt.subplots(2, 1, figsize=(5, 10))
 axes[0].specgram(data, cmap="plasma")
 axes[1].specgram(signal, cmap="plasma")
+# Yoyo
 
 # %%
