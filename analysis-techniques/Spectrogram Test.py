@@ -2,8 +2,11 @@
 import scipy
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 
-samplerate, sample = scipy.io.wavfile.read("./Hello World.wav")
+path = Path(__file__).parent/ "./Hello World.wav"
+
+samplerate, sample = scipy.io.wavfile.read(path)
 sample = sample[30000:90000]
 times = np.linspace(0, 60000, len(sample))/samplerate
 # plt.plot(times, sample)
