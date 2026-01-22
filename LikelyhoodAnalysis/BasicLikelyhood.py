@@ -11,7 +11,7 @@ rnd_object = np.random.default_rng(seed=time_seed)
 # Define Parameters
 t_start = 0
 t_end = 200
-sample_rate = 30
+sample_rate = 15
 N = np.int32((t_end-t_start) * sample_rate)
 
 noise_mean = 0
@@ -87,9 +87,12 @@ plt.show()
 
 
 log_like_diffs = log_likelihood - log_likelihood_average
-log_like_diffs_normalised = log_like_diffs / (log_likelihood[t0_index] - log_likelihood_average)
+log_like_diffs_normalised = log_like_diffs / \
+    (log_likelihood[t0_index] - log_likelihood_average)
 
-log_like_diffs_normalised = np.where(log_like_diffs_normalised > 1, 1, log_like_diffs_normalised)
+log_like_diffs_normalised = \
+    np.where(log_like_diffs_normalised > 1, 1, log_like_diffs_normalised)
+
 plt.plot(times, log_like_diffs_normalised, c="paleturquoise")
 plt.axvline(t0, c="indigo", linestyle="--", alpha=0.5, label="$t_0$")
 plt.axvline(MLE_index/N*t_end, c="red", linestyle="--", alpha=0.5, label="MLE")
@@ -98,15 +101,16 @@ plt.show()
 # %%
 # Create probability distribution
 
-bin_count = 100 + 2
-bins = np.linspace(0, 1.01, bin_count)
-# print(bins)
+bin_count = 200 + 2
+bins = np.linspace(-1, 1.01, bin_count)
+#print(bins)
 
 binned_data = np.digitize(log_like_diffs_normalised, bins)
-print(binned_data)
-data_distribution = np.bincount(binned_data)
-print(data_distribution)
+data_distribution = np.bincount(binned_data) / N
 # %%
-print(data_distribution.shape)
-plt.plot(data_distribution)
+plt.plot(bins, data_distribution)
+plt.title("Log likelihood deviations from average.")
+plt.xlabel("Fraction of the log likelihood for $t=t_0$")
+plt.ylabel("Probability Density")
+plt.show()
 # %%
