@@ -11,7 +11,7 @@ rnd_object = np.random.default_rng(seed=time_seed)
 # Define Parameters
 t_start = 0
 t_end = 200
-sample_rate = 100
+sample_rate = 480
 N = np.int32((t_end-t_start) * sample_rate)
 
 noise_mean = 0
@@ -112,13 +112,42 @@ std_dev = 2 / bin_count * np.std(binned_data)
 print(std_dev)
 # %%
 plt.plot(bins, data_distribution, label="data")
-plt.axvline(std_dev, ls="--", c="violet", label="$1\sigma$")
+plt.axvline(std_dev, ls="--", c="violet", label=r"$1 \sigma$")
 plt.axvline(-std_dev, ls="--", c="violet")
-plt.axvline(2*std_dev, ls="--", c="navajowhite", label="$2\sigma$")
+plt.axvline(2*std_dev, ls="--", c="navajowhite", label=r"$2 \sigma$")
 plt.axvline(-2*std_dev, ls="--", c="navajowhite")
 plt.legend()
 plt.title("Log likelihood deviations from average.")
 plt.xlabel("Fraction of the log likelihood for $t=t_0$")
+plt.ylabel("Probability Density")
+plt.show()
+# %%
+# Note, only do one of these at a time
+run_15 = data_distribution
+# %%
+run_30 = data_distribution
+# %%
+run_60 = data_distribution
+# %%
+run_120 = data_distribution
+# %%
+run_240 = data_distribution
+
+# %%
+run_480 = data_distribution
+
+# %%
+
+plt.plot(bins, run_15, label="15")
+plt.plot(bins, run_30, label="30")
+plt.plot(bins, run_60, label="60")
+plt.plot(bins, run_120, label="120")
+plt.plot(bins, run_240, label="240")
+plt.plot(bins, run_480, label="480")
+plt.legend(title=r"Sample rate / hz")
+plt.title("Log likelihood deviations from average.")
+plt.xlabel("Fraction of the log likelihood for $t=t_0$")
+plt.yscale("log")
 plt.ylabel("Probability Density")
 plt.show()
 # %%
