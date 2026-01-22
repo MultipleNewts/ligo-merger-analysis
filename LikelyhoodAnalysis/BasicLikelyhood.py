@@ -103,7 +103,6 @@ plt.show()
 
 bin_count = 200 + 2
 bins = np.linspace(-1, 1.01, bin_count)
-#print(bins)
 
 binned_data = np.digitize(log_like_diffs_normalised, bins)
 data_distribution = np.bincount(binned_data) / N
