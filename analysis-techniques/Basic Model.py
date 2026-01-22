@@ -9,14 +9,14 @@ time_seed = time.time_ns()
 rnd_object = np.random.default_rng(seed=time_seed)
 
 # Define Parameters
-N = 10000  # Number of Datapoints
 t_start = 0
 t_end = 200
-
+sample_rate = 50
+N = (t_end - t_start) * sample_rate
 noise_mean = 0
 noise_std = 1
 
-signal_wavenumber = 2 * np.pi / 0.3
+signal_anngular_frequency = 2 * np.pi * 3.5
 signal_width = 1
 signal_amplitude = 1
 
@@ -25,7 +25,7 @@ signal_amplitude = 1
 def model(t, t0=0):
     return (signal_amplitude *
             np.exp((-np.power((t-t0)/signal_width, 2))) *
-            np.sin((t-t0)*signal_wavenumber))
+            np.sin((t-t0)*signal_anngular_frequency))
 
 
 # Generate Data
@@ -50,7 +50,7 @@ plt.show()
 # %%
 log_likelihood = np.zeros(N)
 for i in range(0, N):
-    log_likelihood[i] = np.sum(np.power((data-model(times, times[i])), 2))
+    log_likelihood[i] = -np.sum(np.power((data-model(times, times[i])), 2))
 
 MLE = np.argmax(log_likelihood)
 
@@ -63,6 +63,6 @@ plt.show()
 fig, axes = plt.subplots(2, 1, figsize=(5, 10))
 axes[0].specgram(data, cmap="plasma")
 axes[1].specgram(signal, cmap="plasma")
-# Yo
+plt.show()
 
 # %%
