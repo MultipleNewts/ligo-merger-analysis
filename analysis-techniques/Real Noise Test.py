@@ -26,7 +26,7 @@ data = TimeSeries.fetch_open_data("H1", gps_loc, gps_loc+dur)
 plot = data.plot(
     title="LIGO Hanford Observatory: Noise",
     ylabel="Strain amplitude",
-    color="gwpy:ligo-livingston",
+    color="gwpy:ligo-hanford",
     epoch=gps_loc,
 )
 plot.show()
