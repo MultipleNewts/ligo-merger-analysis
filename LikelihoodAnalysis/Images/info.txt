@@ -1,0 +1,11 @@
+t_start = 0
+t_end = 200
+sample_rate = (Varied from 15 to 480, doubling each time)
+N = np.int32((t_end-t_start) * sample_rate)
+
+noise_mean = 0
+noise_std = 1
+
+signal_wavenumber = 2 * np.pi / 0.3
+signal_width = 1
+signal_amplitude = 1

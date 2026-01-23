@@ -1,0 +1,12 @@
+Parameters used for image generation:
+t_start = 0
+t_end = 200
+sample_rate = 50
+N = (t_end - t_start) * sample_rate
+noise_mean = 0
+noise_std = 1
+
+signal_anngular_frequency = 2 * np.pi * 3.5
+signal_width = 1
+signal_amplitude = 1
+t0 = 100

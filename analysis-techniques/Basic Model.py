@@ -33,12 +33,17 @@ times = np.linspace(t_start, t_end, N, endpoint=True)
 noise = rnd_object.normal(noise_mean, noise_std, N)
 
 t0 = rnd_object.uniform(t_start, t_end)
+# t0 = 100
 signal = model(times, t0)
 
 data = signal + noise
 
 # %%
 # Display
+'''
+times = times[4750:5250]
+data = data[4750:5250]
+signal = signal[4750:5250]'''
 plt.plot(times, data, label="data")
 plt.plot(times, signal, label="signal")
 plt.legend(loc="upper right")
@@ -53,6 +58,10 @@ for i in range(0, N):
     log_likelihood[i] = -np.sum(np.power((data-model(times, times[i])), 2))
 
 MLE = np.argmax(log_likelihood)
+
+
+'''times = times[4750:5250]
+log_likelihood = log_likelihood[4750:5250]'''
 
 plt.plot(times, log_likelihood, label="Log-Likelihood")
 plt.axvline(MLE/N*t_end, c="red", linestyle="--", alpha=0.7, label="MLE")
