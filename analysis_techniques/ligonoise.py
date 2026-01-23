@@ -7,7 +7,7 @@ import numpy as np
 
 class LIGONoise:
     def __init__(self, dur, loc=0, event_index=0):
-        """Returns a dataset of noise from the LIGO-H1 GWTC-4.0 Catalogue
+        """Fetches a dataset of noise from the LIGO-H1 GWTC-4.0 Catalogue
 
         Parameters
         ----------
