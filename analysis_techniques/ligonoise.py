@@ -80,3 +80,50 @@ class LIGONoise:
             epoch=self.loc,
         )
         plot.show()
+
+
+class LIGOEvent:
+    def __init__(self, dur, event_index=0):
+        """Fetches a dataset for an event from the LIGO-H1 GWTC-4.0 Catalogue
+
+        Parameters
+        ----------
+        dur : `int`
+            the duration of the signal
+
+        event_index : `int`
+            the index of the event in the GWTC-4.0 catalogue
+            ``[0]`` (also default) represents the most recent event: GW240109_050431
+        """
+        events_gwtc4 = EventTable.fetch_open_data("GWTC-4.0")
+        self.loc = event_gps(events_gwtc4[event_index][0])
+        self.data = TimeSeries.fetch_open_data("H1", self.loc-(dur/2), self.loc+(dur/2))
+
+    def get_data(self):
+        """Returns data array of fetched event"""
+        return self.data.value
+
+    def get_time_vars(self):
+        """Returns initial GPS time and time spacing between array elements
+
+        Returns
+        -------
+        t0 : `float`
+            the GPS time that the data window begins at, in seconds
+
+        dt : `float`
+            the time spacing between each data reading, in seconds
+        """
+        return self.data.t0, self.data.dt
+
+    def plot(self):
+        """
+        Uses ``gwpy.timeseries.TimeSeries`` built-in methods to display the data graphically
+        """
+        plot = self.data.plot(
+            title="LIGO Hanford Observatory: Noise",
+            ylabel="Strain amplitude",
+            color="gwpy:ligo-hanford",
+            epoch=self.loc,
+        )
+        plot.show()
