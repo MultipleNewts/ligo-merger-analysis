@@ -8,6 +8,7 @@ from scipy.signal import butter, filtfilt
 from gwpy.timeseries import TimeSeries
 
 # %%
+#t0 = 1388811889.8
 t0 = 1387620938.3
 detector = "H1"
 int_t0 = t0
@@ -78,7 +79,7 @@ plt.show()
 # %%
 # Give it the ASD
 
-whitened_ft = segment_ft * np.sqrt(1 / power_correction / freq) / np.sqrt(interpretted_PSD)
+whitened_ft = segment_ft * np.sqrt(2 / power_correction / freq) / np.sqrt(interpretted_PSD)
 plt.loglog(segment_freqs, whitened_ft)
 plt.show()
 # %%
@@ -93,7 +94,12 @@ np.var(whitened)
 
 # %%
 # Band pass
-plt.specgram(whitened)
+plt.specgram(whitened,
+             Fs=freq, scale="linear",
+             NFFT=512, noverlap=300, detrend="mean")
+#plt.specgram(whitened[int(segment.shape[0]//2-freq/2):int(segment.shape[0]//2 + freq/2)],
+             #Fs=freq, scale="linear",
+             #NFFT=64, noverlap=50, detrend="mean")
 plt.show()
 # %%
 
@@ -110,5 +116,6 @@ plt.show()
 np.var(whitened_bp)
 #np.mean(whitened_bp)
 # %%
-plt.specgram(whitened_bp, freq)
+plt.specgram(whitened_bp[int(segment.shape[0]//2-freq/2):int(segment.shape[0]//2 + freq/2)], Fs=freq, scale="dB")
+plt.show()
 # %%
