@@ -109,21 +109,17 @@ class PinkNoise(WhiteNoise):
 
     def gen_noise(self, num):
         self.array = rnd_object.normal(self.mean, self.std, num)
-        FFT_data = np.fft.fft(self.array)[1:]
-        FFT_freqs = np.fft.fftfreq(self.get_len(), 1/self.get_samplerate())[1:]
-        plt.plot(FFT_freqs, FFT_data)
-        plt.show()
-        print(".,.,.,")
+        FFT_data = np.fft.rfft(self.array)[1:]
+        FFT_freqs = np.fft.rfftfreq(self.get_len(), 1/self.get_samplerate())[1:]
         temp = []
         for val, f in zip(FFT_data, FFT_freqs):
             temp.append(val/np.emath.sqrt(f))
-        plt.plot(FFT_freqs, temp)
-        plt.show()
-        print("<><><><><><")
-        self.array = np.fft.ifft(temp)
+        self.array = np.fft.irfft(temp)
 
 
 WN = WhiteNoise(10000, 0, 1, 4000)
 PN = PinkNoise(10000, 0, 1, 4000)
 WN.FFT_Freqs()
 PN.FFT_Freqs()
+
+# %%
