@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from analysis_techniques.ligonoise import LIGONoise
+from analysis_techniques.welch_method import welch as custom_welch
 from scipy.signal import windows
 from scipy.signal import welch
 from scipy.signal import butter, filtfilt
@@ -14,6 +15,7 @@ detector = "H1"
 int_t0 = t0
 length = 200
 strain = TimeSeries.fetch_open_data(detector, int_t0-int(length/2), int_t0+int(length/2)).value
+
 
 # %%
 # Calculate PSD of series
@@ -31,6 +33,24 @@ plt.show()
 
 
 # %%
+# Use our own welch
+window_fn = windows.tukey
+freq = 4096
+seglen = freq * 10
+overlap = 0.75
+freqs, PSD = custom_welch(strain, freq, window_fn, seglen, overlap)
+ASD = np.sqrt(PSD)
+plt.loglog(freqs, ASD)
+plt.xlim(10, 2048)
+plt.ylim(1e-24, 1e-19)
+plt.xlabel("Frequency / hz")
+plt.ylabel("ASD / strain/ sqrt(hz)")
+plt.title("Welch ASD")
+plt.grid(True)
+plt.show()
+
+# %%
+# Get Segment
 int_center = int(strain.shape[0]/2)
 half_length = 4
 segment = strain[int_center - int(half_length*freq):int_center + int(half_length*freq)]
@@ -39,11 +59,12 @@ times = np.linspace(-half_length, half_length, segment.shape[0])
 
 fit = np.polyfit(times, segment, 1)
 
-
+plt.figure(figsize=(24,10))
 plt.plot(times, segment)
 plt.xlabel("Time / s")
 plt.ylabel("Strain")
 plt.title("Segment of data")
+plt.xlim(-0.2, 0.2)
 plt.show()
 # %%
 # Process the segment
@@ -80,7 +101,7 @@ plt.show()
 # Give it the ASD
 
 whitened_ft = segment_ft * np.sqrt(2 / power_correction / freq) / np.sqrt(interpretted_PSD)
-plt.loglog(segment_freqs, whitened_ft)
+plt.loglog(segment_freqs, np.abs(whitened_ft))
 plt.show()
 # %%
 whitened = np.fft.irfft(whitened_ft)
@@ -116,6 +137,6 @@ plt.show()
 np.var(whitened_bp)
 #np.mean(whitened_bp)
 # %%
-plt.specgram(whitened_bp[int(segment.shape[0]//2-freq/2):int(segment.shape[0]//2 + freq/2)], Fs=freq, scale="dB")
+plt.specgram(whitened_bp[int(segment.shape[0]//2-freq/2):int(segment.shape[0]//2 + freq/2)], Fs=freq, scale="linear")
 plt.show()
 # %%
