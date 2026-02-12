@@ -1,33 +1,36 @@
 # %%
 import numpy as np
 import matplotlib.pyplot as plt
-from analysis_techniques.ligonoise import LIGONoise
+from analysis_techniques.ligonoise import LIGOEvent
 from analysis_techniques.welch_method import welch as custom_welch
 from scipy.signal import windows
 from scipy.signal import welch
 from scipy.signal import butter, filtfilt
-from gwpy.timeseries import TimeSeries
 
 # %%
-#t0 = 1388811889.8
-t0 = 1387620938.3
-detector = "H1"
-int_t0 = t0
-length = 200
-strain = TimeSeries.fetch_open_data(detector, int_t0-int(length/2), int_t0+int(length/2)).value
-
+EventObject = LIGOEvent(200, 7)  # Index 0 for newest, index 7 for largest
+strain = EventObject.get_data()
+t0, dt = EventObject.get_time_vars()
 
 # %%
 # Calculate PSD of series
-freq = 4096
-freqs, PSD = welch(strain, fs=4096, window=("tukey", 0.25), nperseg=4*freq, noverlap=2*freq, detrend="linear", scaling="density")
+freq = 1/dt.value
+freqs, PSD = welch(
+                strain,
+                fs=freq,
+                window=("tukey", 0.25),
+                nperseg=10*freq,
+                noverlap=2*freq,
+                detrend="linear",
+                scaling="density"
+            )
 ASD = np.sqrt(PSD)
 plt.loglog(freqs, ASD)
 plt.xlim(10, 2048)
 plt.ylim(1e-24, 1e-19)
-plt.xlabel("Frequency / hz")
-plt.ylabel("ASD / strain/ sqrt(hz)")
-plt.title("Welch ASD")
+plt.xlabel(r"Frequency $(Hz)$")
+plt.ylabel(r"ASD $\left(\frac{strain}{\sqrt{hz}}\right)$")
+plt.title("SciPy Welch ASD")
 plt.grid(True)
 plt.show()
 
@@ -35,17 +38,16 @@ plt.show()
 # %%
 # Use our own welch
 window_fn = windows.tukey
-freq = 4096
-seglen = freq * 10
+seglen = int(freq * 10)
 overlap = 0.75
 freqs, PSD = custom_welch(strain, freq, window_fn, seglen, overlap)
 ASD = np.sqrt(PSD)
 plt.loglog(freqs, ASD)
 plt.xlim(10, 2048)
 plt.ylim(1e-24, 1e-19)
-plt.xlabel("Frequency / hz")
-plt.ylabel("ASD / strain/ sqrt(hz)")
-plt.title("Welch ASD")
+plt.xlabel(r"Frequency $(Hz)$")
+plt.ylabel(r"ASD $\left(\frac{strain}{\sqrt{hz}}\right)$")
+plt.title("Custom Welch ASD")
 plt.grid(True)
 plt.show()
 
@@ -59,7 +61,7 @@ times = np.linspace(-half_length, half_length, segment.shape[0])
 
 fit = np.polyfit(times, segment, 1)
 
-plt.figure(figsize=(24,10))
+plt.figure(figsize=(24, 10))
 plt.plot(times, segment)
 plt.xlabel("Time / s")
 plt.ylabel("Strain")
@@ -91,52 +93,63 @@ plt.show()
 # %%
 # Compare to ASD
 interpretted_PSD = np.interp(segment_freqs, freqs, PSD)
-plt.loglog(segment_freqs, np.sqrt((interpretted_PSD * power_correction) / (2 /freq)), linewidth=1)
-plt.loglog(segment_freqs, np.abs(segment_ft), linewidth=1)
-plt.xlabel("Frequency / Hz")
-plt.ylabel("Fourier amplitude")
-plt.title("Fourier transform of pre-processed segment")
+NoiseASD_data = np.sqrt((interpretted_PSD * power_correction) / (2/freq))
+plt.loglog(segment_freqs, NoiseASD_data, linewidth=1, label="Noise ASD")
+plt.loglog(segment_freqs, np.abs(segment_ft), linewidth=1, label="Data ASD")
+plt.xlabel(r"Frequency $(Hz)$")
+plt.ylabel("Fourier Amplitude")
+plt.title("Fourier Transform of Pre-Processed Segment")
+plt.legend()
 plt.show()
 # %%
-# Give it the ASD
+# Factor out the Noise ASD
 
 whitened_ft = segment_ft * np.sqrt(2 / power_correction / freq) / np.sqrt(interpretted_PSD)
 plt.loglog(segment_freqs, np.abs(whitened_ft))
+plt.xlabel(r"Frequency $(Hz)$")
+plt.ylabel("Absolute Fourier Amplitude")
+plt.title("Frequency Domain Whitened Data Signal")
 plt.show()
 # %%
 whitened = np.fft.irfft(whitened_ft)
 plt.plot(times, whitened)
+plt.xlabel(r"Time $(s)$")
+plt.ylabel("Strain")
+plt.title("Time Domain Whitened Data Signal")
 plt.show()
 
 # %%
-np.mean(whitened)
-np.var(whitened)
+print(f"The bandpassed mean is: {np.mean(whitened)}\n"
+      f"The bandpassed variance is: {np.var(whitened)}")
 # %%
-
-# %%
-# Band pass
+# Spectrogram
 plt.specgram(whitened,
              Fs=freq, scale="linear",
              NFFT=512, noverlap=300, detrend="mean")
-#plt.specgram(whitened[int(segment.shape[0]//2-freq/2):int(segment.shape[0]//2 + freq/2)],
-             #Fs=freq, scale="linear",
-             #NFFT=64, noverlap=50, detrend="mean")
+# plt.specgram(whitened[int(segment.shape[0]//2-freq/2):int(segment.shape[0]//2 + freq/2)],
+#              Fs=freq, scale="linear",
+#              NFFT=64, noverlap=50, detrend="mean")
 plt.show()
 # %%
+# Bandpass
 
 lowFreq = 35
 highFreq = 350
 order = 4
 b, a = butter(order, [lowFreq, highFreq], btype="band", fs=freq)
 whitened_bp = filtfilt(b, a, whitened)
-plt.figure(figsize=(24,10))
+plt.figure(figsize=(24, 10))
 plt.plot(times, whitened_bp)
 plt.xlim((-0.2, 0.2))
+plt.xlabel(r"Time $(s)$")
+plt.ylabel(r"Strain Amplitude")
+plt.title("Blackhole Merger Signal")
 plt.show()
 # %%
-np.var(whitened_bp)
-#np.mean(whitened_bp)
+print(f"The bandpassed mean is: {np.mean(whitened_bp)}\n"
+      f"The bandpassed variance is: {np.var(whitened_bp)}")
 # %%
-plt.specgram(whitened_bp[int(segment.shape[0]//2-freq/2):int(segment.shape[0]//2 + freq/2)], Fs=freq, scale="linear")
+segment_data = whitened_bp[int(segment.shape[0]//2-freq/2):int(segment.shape[0]//2 + freq/2)]
+plt.specgram(segment_data, Fs=freq, scale="linear")
 plt.show()
 # %%
