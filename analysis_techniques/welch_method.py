@@ -1,11 +1,11 @@
 # %%
 import numpy as np
-from scipy.signal.windows import blackman
+from scipy.signal.windows import tukey
 
 
 # %%
 # an implementation of Welch's method for finding an averaged PSD
-def welch(data, fs, window_func=blackman, seglength=256, overlap=0.5):
+def welch(data, fs, window_func=tukey, seglength=256, overlap=0.5):
     """
     Applies Welch's Method to signal data to get an averaged PSD/periodogram.
 
@@ -63,3 +63,4 @@ def welch(data, fs, window_func=blackman, seglength=256, overlap=0.5):
     # obtains domain of frequencies
     freqs = np.fft.rfftfreq(seglength, 1/fs)
     return freqs, averaged_PSD
+
