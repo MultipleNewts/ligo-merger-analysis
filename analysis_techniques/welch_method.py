@@ -26,7 +26,7 @@ def welch(data, fs, window_func=blackman, seglength=256, overlap=0.5):
     Returns
     -------
     freqs : `array`
-        sample frequencies of data
+        sample frequencies domain of data
     avgPSD : `array`
         the power spectral density graph averaged using Welch's method
     """
