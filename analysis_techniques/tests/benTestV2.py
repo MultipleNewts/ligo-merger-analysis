@@ -38,7 +38,7 @@ plt.show()
 # %%
 # Use our own welch
 window_fn = windows.tukey
-seglen = int(freq * 10)
+seglen = int(freq * 4)
 overlap = 0.75
 freqs, PSD = custom_welch(strain, freq, window_fn, seglen, overlap)
 ASD = np.sqrt(PSD)
@@ -54,7 +54,7 @@ plt.show()
 # %%
 # Get Segment
 int_center = int(strain.shape[0]/2)
-half_length = 4
+half_length = 2
 segment = strain[int_center - int(half_length*freq):int_center + int(half_length*freq)]
 times = np.linspace(-half_length, half_length, segment.shape[0])
 
@@ -72,8 +72,8 @@ plt.show()
 # Process the segment
 
 # Remove DC signal
-fit = np.polyfit(times, segment, 1)
-segment_delinearised = segment - (fit[0] * times + fit[1])
+fit = np.polyfit(times, segment, 0)
+segment_delinearised = segment - fit[0]
 
 window = windows.tukey(segment.shape[0])
 power_correction = np.sum(np.power(window, 2)) / window.shape[0]
