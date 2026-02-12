@@ -89,7 +89,7 @@ class LIGOEvent:
         Parameters
         ----------
         dur : `int`
-            the duration of the signal
+            the duration of the signal in seconds
 
         event_index : `int`
             the index of the event in the GWTC-4.0 catalogue
