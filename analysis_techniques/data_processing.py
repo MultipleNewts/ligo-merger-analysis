@@ -1,10 +1,7 @@
 # %%
 import numpy as np
-import matplotlib.pyplot as plt
-from analysis_techniques.ligonoise import LIGOEvent
-from analysis_techniques.welch_method import welch
-from scipy.signal.windows import blackman, tukey
-from scipy.signal import butter, filtfilt
+from scipy.signal.windows import tukey
+from scipy.signal import butter, sosfilt
 
 
 # %%
@@ -23,7 +20,7 @@ def whiten(data, fs, noise_freqs, noise_psd, window_func=tukey):
     noise_psd : `array`
         the power spectral density to be factored out
     window_func : `FunctionType`
-        function pointer for window function, defaults to ######
+        function pointer for window function, defaults to `tukey`
 
     Returns
     -------
@@ -49,3 +46,29 @@ def whiten(data, fs, noise_freqs, noise_psd, window_func=tukey):
     processed_data = np.fft.irfft(whitened_data)
     return processed_data
 
+
+def bandpass(data, fs, band_min=35, band_max=350, order=8):
+    """
+    Bandpasses data between a minimum and maximum frequency.
+
+    Parameters
+    ----------
+    data : `array`
+        the signal data to bandpass
+    fs : `int`
+        the sampling frequency of the data sample
+    band_min : `float`
+        the minimum frequency of the bandpass, defaults to `35`
+    band_max : `float`
+        the maximum frequency of the bandpass, defaults to `350`
+    order : `int`
+        the number of the times the filter is applied, defaults to `8`
+
+    Returns
+    -------
+    filtered_data : `array`
+        the bandpassed data signal in the time domain
+    """
+    sos = butter(order, [band_min, band_max], btype="band", fs=fs, output="sos")
+    filtered_data = sosfilt(sos, data)
+    return filtered_data
