@@ -52,4 +52,36 @@ ht = np.fft.ifft(hf)
 # plt.plot(fs, np.real(hs))
 plt.plot(ht)
 plt.show()
+
+
+# %%
+# V3
+Mpc = 3.08e+22
+Msol = 2e+30
+# Deff =
+
+
+def Amp(chirpM):
+    return (-1)*np.power((5/(24*np.pi)), (1/2))*(sp.G*Msol/(sp.c*sp.c*Mpc))*np.power((np.pi*sp.G*Msol/(sp.c*sp.c*sp.c)), (-1/6))*np.power((chirpM/Msol), (5/6))
+
+
+def Wavefunc(f, TM, eta):
+    v = np.power((sp.G*TM/(sp.c**3)*np.pi*f), (1/3))
+    return (-1*np.pi/4)+((3/(128*eta)))*(np.power(v, -5)+(3715/756+55*eta/9)*np.power(v, -3)-16*np.pi*np.power(v, -2)+((15293365/508032)+(27145*eta/504)+(3085*eta*eta/72))*np.power(v, -1))
+
+
+def fourier_template(f, m1, m2):
+    TM = m1 + m2
+    mu = m1*m2/TM
+    eta = mu/TM
+    chirpM = np.power(eta, (3/5))*TM
+    return Mpc*Amp(chirpM)*np.power(f, (-7/6))*np.exp((-1)*1j*Wavefunc(f, TM, eta))
+
+
+fs = np.linspace(10, 350, 1000)
+h_f = fourier_template(fs, 40.1*Msol, 35*Msol)
+h_t = np.fft.ifft(h_f)
+plt.plot(h_t)
+
+
 # %%
