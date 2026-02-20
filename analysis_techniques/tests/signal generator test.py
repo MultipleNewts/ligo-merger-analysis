@@ -85,3 +85,23 @@ plt.plot(h_t)
 
 
 # %%
+def phi(t, eta, M):
+    return -1/eta * np.power((-t / 5 / M), 5/8)
+
+
+def h_template(t, m1, m2, phi_0=0):
+    TM = m1 + m2
+    mu = m1*m2/TM
+    eta = mu/TM
+    chirpM = np.power(eta, (3/5))*TM
+
+    const = - (sp.G * chirpM / np.power(sp.c, 2))
+    variable = np.power((-t/(5 * sp.G * chirpM / np.power(sp.c, 3))), -1/4)
+    cos_bit = np.cos(phi_0 + 2*phi(t, eta, TM))
+    return const * variable * cos_bit
+
+times = np.linspace(-1, 2, 1000)
+s = h_template(times, 10*Msol, 4*Msol)
+plt.plot(times, s)
+plt.show()
+# %%
