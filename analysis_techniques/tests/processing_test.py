@@ -29,11 +29,13 @@ plt.ylabel("Strain")
 plt.title("Time Domain Whitened Data Signal")
 plt.show()
 # %%
+plt.figure(figsize=(12, 5))
 bp_data = bandpass(whitened_data, fs, order=8)
-plt.plot(times, bp_data)
+plt.plot(times, bp_data, lw=1)
 plt.xlabel(r"Time $(s)$")
-plt.xlim((-0.15, 0.15))
-plt.ylabel("Strain")
+plt.xlim((-0.25, 0.25))
+plt.ylabel(r"Strain /$\sigma$")
 plt.title("Bandpassed & Whitened Data Signal")
 plt.show()
+
 # %%
