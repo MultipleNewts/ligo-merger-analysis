@@ -9,6 +9,7 @@ from analysis_techniques.templateImporting import Templates
 
 
 # %%
+# processes data (whitens and bandpasses)
 def process_data(data, fs, freqs, PSD):
     whitened_data = whiten(data, fs, freqs, PSD, tukey)
     bp_data = bandpass(whitened_data, fs, order=8)
@@ -37,21 +38,30 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
         index = int(i*step)
         segments.append(full_data[index:(index+test_length)])
 
-    # test each window
+    # test each template from bank
     for i in range(template_bank.template_count):
         print("reached")
+        # retrieves template from API
         template = template_bank.get_template(i)
+        # retrieves model data from template
         model = template.hp[:test_index]
+        # processes model (whiten + bandpass) to ensure same scale as processed data
         proc_model = process_data(model, fs, freqs, PSD)
+        # retrieves model timestamps (timestamp 0 centred on chirp)
         model_times = template.times[:test_index]
+
+        # iterates through every window segment in dataset
         for j, segment in enumerate(segments):
             if j % 100 == 0:
                 print(f"Processing Segment {j}...")
+            # processes each window
             proc_data = process_data(segment, fs, freqs, PSD)
             test_dur = test_length/fs
             dt = 1/fs
-            times = np.linspace(0, test_dur, segment.shape[0])
+            times = np.linspace(-test_dur, 0, segment.shape[0])
             temp_data = np.zeros(test_length)
+
+            # tests against every datapoint in window
             for k in range(test_length):
                 interp_data = np.interp(model_times, times+(dt*k), proc_data)
                 inner_product = np.sum(interp_data[:-1] * proc_model)
@@ -67,6 +77,7 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
                                     ),
                          temp_data))
 
+    # returns the timestamp of all events relative to the start of the data
     return events, processed
 
 
@@ -83,6 +94,6 @@ event_times, ip_vals = detect_events(strain, Template_Manager, fs, tukey, 4, 0.5
 
 # %%
 print(len(event_times))
-print(event_times)
-plt.plot(*ip_vals[200])
+# print(event_times)
+plt.plot(*ip_vals[3])
 # %%
