@@ -63,7 +63,7 @@ segment_times = np.linspace(-length/2, length/2, indexes)
 
 
 
-#plt.plot(template_times, whitened_template_hp)
+# plt.plot(template_times, whitened_template_hp)
 plt.plot(segment_times, whitened_segment)
 plt.show()
 # %%

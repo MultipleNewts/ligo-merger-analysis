@@ -17,6 +17,14 @@ class Template:
         self.hp = np.array(template_dict["values_plus"])
         self.hc = np.array(template_dict["values_cross"])
         self.times = np.array(template_dict["times"])
+    
+    def make_even(self):
+        """If the data has an odd amount of data points, remove the last one.
+        """
+        if self.hp.shape[0] % 2 == 1:
+            self.hp = self.hp[:-1]
+            self.hc = self.hc[:-1]
+            self.times = self.times[:-1]
 
 
 class Templates:
@@ -39,7 +47,7 @@ class Templates:
         self.mass_step = self.templateDict["mass_step"]
         self.distances = self.templateDict["distances"]
 
-    def get_template(self, event_index=0, mass1=-1, mass2=-1):
+    def get_template(self, event_index=0, mass1=-1, mass2=-1, make_even=True):
         """Returns a template
 
         Parameters
@@ -81,4 +89,7 @@ class Templates:
         index = jump2 if mass1 != -1 else event_index
 
         self.selectedTemplate = self.templateDict["templates"][index]
-        return Template(self.selectedTemplate)
+        to_return = Template(self.selectedTemplate)
+        if make_even:
+            to_return.make_even()
+        return to_return

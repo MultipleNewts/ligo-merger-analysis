@@ -5,7 +5,6 @@ from analysis_techniques.ligonoise import LIGOEvent
 from analysis_techniques.welch_method import welch
 from analysis_techniques.data_processing import whiten, bandpass
 from scipy.signal.windows import tukey
-import json
 from analysis_techniques.templateImporting import Templates
 
 # %%
@@ -16,7 +15,9 @@ fs = 1/dt.value
 # %%
 Template_Manager = Templates("templates/Event7Template.json")
 template = Template_Manager.get_template(0)
-model = template.hp[:-1]
+model = template.hp[:]
+
+model_times = template.times[:]
 plt.plot(model)
 # %%
 fs = 1/dt.value
@@ -24,10 +25,10 @@ seglen = int(fs)*4
 freqs, PSD = welch(strain, fs, tukey, seglen, overlap=0.75)
 L = strain.shape[0]//2
 step = 4096*2
-segment = strain[L-step:L+step]
+segment = strain[L-3*step:L-step]
 whitened_data = whiten(segment, fs, freqs, PSD, tukey)
 bp_data = bandpass(whitened_data, fs, order=8)
-times = np.linspace(-2, 2, segment.shape[0])
+times = np.linspace(-2, 2, segment.shape[0]) 
 # %%
 whitened_model = whiten(model, fs, freqs, PSD, tukey)
 bp_model = bandpass(whitened_model, fs, order=8)
@@ -43,25 +44,24 @@ bp_data_cut = bp_data[L-split:L+split]
 times_cut = times[L-split:L+split]
 print(len(bp_data_cut), len(bp_model))
 # %%
-plt.figure(figsize=(24,10))
-t0 = -0.0065
-model_times = times_cut+t0
+plt.figure(figsize=(24, 10))
+t0 =  -0.00012250012250014652
 plt.plot(model_times, bp_model)
-plt.plot(times_cut, bp_data_cut)
-# plt.xlim([-0.5,0.5])
+plt.plot(times+t0, bp_data, alpha=0.75)
+plt.xlim([-0.2, 0.2])
 # %%
 print(fs*t0)
 # %%
 np.linalg.norm([bp_data_cut[:-27], bp_model[27:]])
 # %%
 
-model_times = template.times[:-1]
+model_times = template.times[:]
 # Good t0 ish = -0.0065
 iters = 1000000
 t0s = np.linspace(-0.5, 0.5, iters)
 inner_prods = np.zeros(iters)
 for i, t0 in enumerate(t0s):
-    if i % 100 == 0:
+    if i % 10000 == 0:
         print(i)
     interp_data = np.interp(model_times, times+t0, bp_data)
     inner_product = np.sum(interp_data * bp_model)
@@ -75,11 +75,12 @@ plt.axvline(optimal, c="r", linestyle="--", alpha=0.2)
 plt.show()
 
 # %%
-plt.figure(figsize=(24,10))
+plt.figure(figsize=(24, 10))
 plt.plot(model_times, bp_model)
 plt.plot(model_times, interp_data)
 t_low = np.min(model_times)
 t_high = np.max(model_times)
-plt.xlim((t_low,t_high))
+plt.xlim((t_low, t_high))
 plt.show()
+
 # %%
