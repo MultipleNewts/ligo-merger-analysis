@@ -68,4 +68,3 @@ ax[3].set_title("PSD from Welch's Method")
 ax[3].legend()
 plt.tight_layout()
 plt.show()
-

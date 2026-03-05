@@ -47,7 +47,9 @@ plt.show()
 # %%
 log_likelihood = np.zeros(N)
 for i in range(0, N):
-    log_likelihood[i] = np.sum(np.power((data-model(times, *model_vars, times[i])), 2))
+    log_likelihood[i] = np.sum(np.power((data-model(
+        times,
+        *model_vars, times[i])), 2))
 
 MLE = np.argmax(log_likelihood)
 

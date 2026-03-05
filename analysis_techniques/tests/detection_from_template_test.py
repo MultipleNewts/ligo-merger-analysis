@@ -31,6 +31,10 @@ times = np.linspace(-2, 2, segment.shape[0])
 # %%
 whitened_model = whiten(model, fs, freqs, PSD, tukey)
 bp_model = bandpass(whitened_model, fs, order=8)
+
+# %%
+plt.plot(times, bp_data)
+plt.show()
 # %%
 print(len(bp_data), len(bp_model))
 L = len(bp_data)//2

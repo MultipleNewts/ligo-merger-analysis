@@ -5,7 +5,11 @@ from scipy.signal import butter, sosfilt
 
 
 # %%
-def whiten(data, fs, noise_freqs, noise_psd, window_func=tukey, fourier_output=False):
+def whiten(
+        data, fs, noise_freqs,
+        noise_psd, window_func=tukey,
+        fourier_output=False
+        ):
     """
     Whitens data by factoring out a given frequency profile.
 
@@ -34,7 +38,7 @@ def whiten(data, fs, noise_freqs, noise_psd, window_func=tukey, fourier_output=F
     # detrends (by constant) and windows adata
     windowed_data = w*(data - np.mean(data))
     # computes power correction for data
-    power_correction = np.sum(np.power(w, 2)) / w.shape[0]  # is this the same as mine???
+    power_correction = np.sum(np.power(w, 2)) / w.shape[0]
 
     # Fourier transform data and find frequency domain
     FT_data = np.fft.rfft(windowed_data)
@@ -42,8 +46,11 @@ def whiten(data, fs, noise_freqs, noise_psd, window_func=tukey, fourier_output=F
 
     # whiten data
     interp_PSD = np.interp(data_freqs, noise_freqs, noise_psd)
-    whitened_data = FT_data * np.sqrt(2 / power_correction / fs) / np.sqrt(interp_PSD)
-    if fourier_output != True:
+    whitened_data = (
+        FT_data * np.sqrt(2 / power_correction / fs)
+        / np.sqrt(interp_PSD)
+        )
+    if fourier_output is not True:
         processed_data = np.fft.irfft(whitened_data)
         return processed_data
     return whitened_data
@@ -71,6 +78,9 @@ def bandpass(data, fs, band_min=35, band_max=350, order=8):
     filtered_data : `array`
         the bandpassed data signal in the time domain
     """
-    sos = butter(order, [band_min, band_max], btype="band", fs=fs, output="sos")
+    sos = butter(
+        order, [band_min, band_max],
+        btype="band", fs=fs, output="sos"
+        )
     filtered_data = sosfilt(sos, data)
     return filtered_data
