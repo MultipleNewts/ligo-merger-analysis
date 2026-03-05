@@ -49,14 +49,26 @@ for i in range(0, strain.shape[0]-10000):
     filterValues
 
  # %%
+ # Prepare whitened template
+template_times = template.times[:-1]
+template_hp = template.hp[:-1]
+whitened_template_hp = whiten(template_hp, 4096, freqs, PSD)
 
-plt.plot(template.times[:-1], template.hp[:-1])
+# Prepare whitened_segment
+t0 = strain.shape[0] // 2
+indexes = template_times.shape[0]
+segment = strain[t0-indexes//2 : t0+indexes//2]
+length = indexes*dt
+segment_times = np.linspace(-length/2, length/2, indexes)
+
+
+
+#plt.plot(template_times, whitened_template_hp)
+plt.plot(segment_times, whitened_segment)
 plt.show()
 # %%
-whitened_template_hp = whiten(template.hp[:-1], 4096, freqs, PSD)
-plt.plot(template.times[:-1], whitened_template_hp)
-
-# %%
-template.times.shape[0]
-
+ting = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+indexes = 3
+t0 = 5
+ting[t0-3:t0+3]
 # %%
