@@ -5,7 +5,7 @@ from scipy.signal import butter, sosfilt
 
 
 # %%
-def whiten(data, fs, noise_freqs, noise_psd, window_func=tukey):
+def whiten(data, fs, noise_freqs, noise_psd, window_func=tukey, fourier_output=False):
     """
     Whitens data by factoring out a given frequency profile.
 
@@ -43,8 +43,10 @@ def whiten(data, fs, noise_freqs, noise_psd, window_func=tukey):
     # whiten data
     interp_PSD = np.interp(data_freqs, noise_freqs, noise_psd)
     whitened_data = FT_data * np.sqrt(2 / power_correction / fs) / np.sqrt(interp_PSD)
-    processed_data = np.fft.irfft(whitened_data)
-    return processed_data
+    if fourier_output != True:
+        processed_data = np.fft.irfft(whitened_data)
+        return processed_data
+    return whitened_data
 
 
 def bandpass(data, fs, band_min=35, band_max=350, order=8):
