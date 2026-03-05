@@ -40,9 +40,10 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
     template_events = {}
     # test each template from bank
     for i in range(template_bank.template_count):
-        print("reached")
+        print(f"reached template {i}")
         # retrieves template from API
         template = template_bank.get_template(i)
+        print(f"Masses {template.mass1}, {template.mass2}")
         # retrieves model data from template
         model = template.hp[:test_index]
         # processes model (whiten + bandpass) to ensure same scale as processed data
@@ -89,7 +90,10 @@ EventObject = LIGOEvent(200, 7)
 strain = EventObject.get_data()
 t0, dt = EventObject.get_time_vars()
 fs = 1/dt.value
-Template_Manager = Templates("templates/Event7Template.json")
+
+# %%
+Template_Manager = Templates("templates/Event7TemplatesMore.json")
+print(Template_Manager.template_count)
 template = Template_Manager.get_template(0)
 # %%
 event_times, ip_vals = detect_events(strain, Template_Manager, fs, tukey, 4, 0.5)
