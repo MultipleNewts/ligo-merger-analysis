@@ -38,6 +38,7 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
         segments.append(full_data[index:(index+test_length)])
 
     template_events = {}
+    template_plots = {}
     # test each template from bank
     for i in range(template_bank.template_count):
         print(f"reached template {i}")
@@ -46,15 +47,17 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
         print(f"Masses {template.mass1}, {template.mass2}")
         # retrieves model data from template
         model = template.hp[:test_index]
+        tmpl_split = int(len(model)//2)
         # processes model (whiten + bandpass) to ensure same scale as processed data
         proc_model = process_data(model, fs, freqs, PSD)
         # retrieves model timestamps (timestamp 0 centred on chirp)
         model_times = template.times[:test_index]
         events = []
+        plots = []
 
         # iterates through every window segment in dataset
         for j, segment in enumerate(segments):
-            if j % 100 == 0:
+            if j % 10 == 0:
                 print(f"Processing Segment {j}...")
             # processes each window
             proc_data = process_data(segment, fs, freqs, PSD)
@@ -70,6 +73,7 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
                 temp_data[k] = inner_product
                 if inner_product > 300:
                     events.append(((j*test_dur + k*dt), np.max(temp_data)))
+                    plots.append(proc_data[k-tmpl_split:k+tmpl_split])
                     processed.append(
                         (np.linspace(
                                     (j*test_dur),
@@ -79,9 +83,10 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
                                     ),
                          temp_data))
         template_events["Template "+str(i)] = events
+        template_plots["Template "+str(i)] = (proc_model, plots)
 
     # returns the timestamp of all events relative to the start of the data
-    return template_events, processed
+    return template_events, template_plots, processed
 
 
 # %%
@@ -96,10 +101,34 @@ Template_Manager = Templates("templates/Event7TemplatesMore.json")
 print(Template_Manager.template_count)
 template = Template_Manager.get_template(0)
 # %%
-event_times, ip_vals = detect_events(strain, Template_Manager, fs, tukey, 4, 0.5)
+event_times, event_plots, ip_vals = detect_events(strain, Template_Manager, fs, tukey, 4, 0.5)
+
 
 # %%
-print(len(event_times["Template 0"]))
-print(event_times)
-plt.plot(*ip_vals[1])
+def find_best_data(event_times, event_plots):
+    max_values = []
+    max_pos = []
+    occ_times = []
+    for key, event in event_times.items():
+        max_values.append(np.max(event, axis=0)[1])
+        max_idx = np.argmax(event, axis=0)[1]
+        max_pos.append(max_idx)
+        occ_times.append(event[max_idx][0])
+    best_fit = np.argmax(max_values)
+    print(f"The template that best fits the dataset is Template {best_fit}")
+    print(f"The event occurs {occ_times[best_fit]:.7f} seconds into the dataset")
+    print(f"The best fit of the event has an inner product of {max_values[best_fit]:.7f}.")
+
+    index = max_pos[best_fit]
+    key = "Template "+str(best_fit)
+    model = event_plots[key][0]
+    data = event_plots[key][1][index]
+    plt.figure(figsize=(24, 10))
+    plt.plot(model)
+    plt.plot(data)
+
+
+# %%
+find_best_data(event_times, event_plots)
+
 # %%
