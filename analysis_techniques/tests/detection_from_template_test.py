@@ -13,7 +13,11 @@ strain = EventObject.get_data()
 t0, dt = EventObject.get_time_vars()
 fs = 1/dt.value
 # %%
-Template_Manager = Templates("templates/Event7Template.json")
+default = "templates/Event7Template.json"
+BBHModel = "templates/Event7Template.json"
+IMRPhenomXo4 = "templates/Event7TemplateIMRPhenomXo4.json"
+
+Template_Manager = Templates(default)
 template = Template_Manager.get_template(0)
 model = template.hp[:]
 
@@ -25,7 +29,7 @@ seglen = int(fs)*4
 freqs, PSD = welch(strain, fs, tukey, seglen, overlap=0.75)
 L = strain.shape[0]//2
 step = 4096*2
-segment = strain[L-3*step:L-step]
+segment = strain[L-step:L+step]
 whitened_data = whiten(segment, fs, freqs, PSD, tukey)
 bp_data = bandpass(whitened_data, fs, order=8)
 times = np.linspace(-2, 2, segment.shape[0]) 
@@ -45,7 +49,7 @@ times_cut = times[L-split:L+split]
 print(len(bp_data_cut), len(bp_model))
 # %%
 plt.figure(figsize=(24, 10))
-t0 =  -0.00012250012250014652
+t0 =  -0.006772506772506792
 plt.plot(model_times, bp_model)
 plt.plot(times+t0, bp_data, alpha=0.75)
 plt.xlim([-0.2, 0.2])
@@ -77,7 +81,7 @@ plt.show()
 # %%
 plt.figure(figsize=(24, 10))
 plt.plot(model_times, bp_model)
-plt.plot(model_times, interp_data)
+plt.plot(times+optimal, bp_data)
 t_low = np.min(model_times)
 t_high = np.max(model_times)
 plt.xlim((t_low, t_high))
