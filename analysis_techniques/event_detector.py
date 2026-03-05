@@ -21,7 +21,7 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
     # compute Welch PSD
     freqs, PSD = welch(strain, fs, window_func, int(seg_dur*fs), overlap=overlap)
     # compute test length
-    test_length = len(template_bank.get_template(0).hp)
+    test_length = int(4*fs)
     if test_length % 2 != 0:
         test_length -= 1
     test_index = test_length - 1
@@ -64,9 +64,9 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
             # tests against every datapoint in window
             for k in range(test_length):
                 interp_data = np.interp(model_times, times+(dt*k), proc_data)
-                inner_product = np.sum(interp_data[:-1] * proc_model)
+                inner_product = np.sum(interp_data * proc_model)
                 temp_data[k] = inner_product
-                if inner_product > 600:
+                if inner_product > 300:
                     events.append(j*test_dur + k*dt)
                     processed.append(
                         (np.linspace(
@@ -94,6 +94,6 @@ event_times, ip_vals = detect_events(strain, Template_Manager, fs, tukey, 4, 0.5
 
 # %%
 print(len(event_times))
-# print(event_times)
-plt.plot(*ip_vals[3])
+print(event_times)
+plt.plot(*ip_vals[1])
 # %%
