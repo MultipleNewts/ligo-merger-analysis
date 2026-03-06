@@ -6,7 +6,9 @@ from analysis_techniques.ligonoise import LIGOEvent
 from analysis_techniques.welch_method import welch
 from analysis_techniques.data_processing import whiten, bandpass
 from analysis_techniques.templateImporting import Templates
-
+import time
+from cuda_flow.dot_product import inner_prod
+from numba import cuda
 
 # %%
 # processes data (whitens and bandpasses)
@@ -17,7 +19,7 @@ def process_data(data, fs, freqs, PSD):
 
 
 # %%
-def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=4, overlap=0.75):
+def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=4, overlap=0.75, acceleration=False):
     # compute Welch PSD
     freqs, PSD = welch(strain, fs, window_func, int(seg_dur*fs), overlap=overlap)
     # compute test length
@@ -66,11 +68,23 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
             times = np.linspace(-test_dur, 0, segment.shape[0])
             temp_data = np.zeros(test_length)
             
+            sumOfInterp = 0
+            sumOfProd = 0
 
             # tests against every datapoint in window
             for k in range(test_length):
+                start = time.time_ns()
                 interp_data = np.interp(model_times, times+(dt*k), proc_data)
-                inner_product = np.sum(interp_data * proc_model)
+                interp_done = time.time_ns()
+                if acceleration == False:
+                    inner_product = np.sum(interp_data * proc_model)
+                else:
+                    inner_product = inner_prod(interp_data, proc_model)
+                prod_done = time.time_ns()
+
+                sumOfInterp += interp_done-start
+                sumOfProd += prod_done-interp_done
+
                 temp_data[k] = inner_product
                 if inner_product > 300:
                     events.append(((j*test_dur + k*dt), np.max(temp_data)))
@@ -83,6 +97,9 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
                                     endpoint=True
                                     ),
                          temp_data))
+            if j % 10 == 0:
+                print(sumOfInterp)
+                print(sumOfProd)
         template_events["Template "+str(i)] = events
         template_plots["Template "+str(i)] = (proc_model, plots)
 
@@ -102,7 +119,7 @@ Template_Manager = Templates("templates/Event7TemplatesCutDown.json")
 print(Template_Manager.template_count)
 template = Template_Manager.get_template(0)
 # %%
-event_times, event_plots, ip_vals = detect_events(strain, Template_Manager, fs, tukey, 4, 0.5)
+event_times, event_plots, ip_vals = detect_events(strain, Template_Manager, fs, tukey, 4, 0.5, acceleration=True)
 
 
 # %%
@@ -137,5 +154,9 @@ print(event_times)
 # %%
 template_count = Template_Manager.template_count
 for i in range(template_count):
-    print(Template_Manager.get_template(i).hp.shape[0])
+    print(Template_Manager.get_template(i).times)
+# %%
+
+print(cuda.is_available())
+
 # %%
