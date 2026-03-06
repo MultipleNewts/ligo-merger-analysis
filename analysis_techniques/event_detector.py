@@ -65,6 +65,7 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
             dt = 1/fs
             times = np.linspace(-test_dur, 0, segment.shape[0])
             temp_data = np.zeros(test_length)
+            
 
             # tests against every datapoint in window
             for k in range(test_length):
@@ -97,7 +98,7 @@ t0, dt = EventObject.get_time_vars()
 fs = 1/dt.value
 
 # %%
-Template_Manager = Templates("templates/Event7TemplatesMore.json")
+Template_Manager = Templates("templates/Event7TemplatesCutDown.json")
 print(Template_Manager.template_count)
 template = Template_Manager.get_template(0)
 # %%
@@ -131,4 +132,10 @@ def find_best_data(event_times, event_plots):
 # %%
 find_best_data(event_times, event_plots)
 
+# %%
+print(event_times)
+# %%
+template_count = Template_Manager.template_count
+for i in range(template_count):
+    print(Template_Manager.get_template(i).hp.shape[0])
 # %%
