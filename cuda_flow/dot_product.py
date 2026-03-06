@@ -12,20 +12,15 @@ def inner_prod_cuda(arr1, arr2, arr_out, L):
 
 def inner_prod(arr1, arr2):
     arr_out = np.zeros(arr1.shape[0])
-    print("Copy")
     d_arr1 = cuda.to_device(arr1)
     d_arr2 = cuda.to_device(arr2)
     d_arr_out = cuda.to_device(arr_out)
-    print("Done")
     shape = arr1.shape[0]
 
     threads_per_block = 64
     blocks_per_grid = (shape // threads_per_block) + 1
-    print("Hi")
     inner_prod_cuda[blocks_per_grid, threads_per_block](d_arr1, d_arr2, d_arr_out, shape)
-    print("Bye")
     arr_out = d_arr_out.copy_to_host()
-    print("Hu")
     return np.sum(arr_out)
 
 # %%
