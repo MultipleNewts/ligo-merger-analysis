@@ -65,7 +65,6 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
             dt = 1/fs
             times = np.linspace(-test_dur, 0, segment.shape[0])
             temp_data = np.zeros(test_length)
-            
 
             # tests against every datapoint in window
             for k in range(test_length):
@@ -101,12 +100,14 @@ fs = 1/dt.value
 Template_Manager = Templates("templates/Event7TemplatesCutDown.json")
 print(Template_Manager.template_count)
 template = Template_Manager.get_template(0)
+
 # %%
 event_times, event_plots, ip_vals = detect_events(strain, Template_Manager, fs, tukey, 4, 0.5)
 
 
 # %%
-def find_best_data(event_times, event_plots):
+def find_best_data(template_bank, event_times, event_plots, fs):
+    dt = 1/fs
     max_values = []
     max_pos = []
     occ_times = []
@@ -116,21 +117,36 @@ def find_best_data(event_times, event_plots):
         max_pos.append(max_idx)
         occ_times.append(event[max_idx][0])
     best_fit = np.argmax(max_values)
+    occurred = occ_times[best_fit]
     print(f"The template that best fits the dataset is Template {best_fit}")
-    print(f"The event occurs {occ_times[best_fit]:.7f} seconds into the dataset")
+    print(f"The event occurs {occurred:.7f} seconds into the dataset")
     print(f"The best fit of the event has an inner product of {max_values[best_fit]:.7f}.")
+
+    best_model = template_bank.get_template(best_fit)
+    M1, M2 = (best_model.mass1, best_model.mass2)
+    print(f"This suggests the black hole masses involved were M1: {M1} & M2: {M2} in solar masses.")
 
     index = max_pos[best_fit]
     key = "Template "+str(best_fit)
     model = event_plots[key][0]
     data = event_plots[key][1][index]
+    incr = dt*len(data)/2
+    times = np.linspace(occurred-incr, occurred+incr, len(data))
+    solM = r"$M_{\odot}$"
     plt.figure(figsize=(24, 10))
-    plt.plot(model)
-    plt.plot(data)
+    plt.plot(times, model, label=f"Model: {M1}{solM}; {M2}{solM}")
+    plt.plot(times, data, label="Data")
+    plt.title("Best Fitting Model for Detected BH-BH Merger Event", fontsize=30)
+    plt.xlabel(r"Times ($s$)", fontsize=25)
+    plt.xticks(fontsize=20)
+    plt.ylabel(r"Standard Deviations ($\sigma$)", fontsize=25)
+    plt.yticks(fontsize=20)
+    plt.legend(fontsize=25)
+    plt.show()
 
 
 # %%
-find_best_data(event_times, event_plots)
+find_best_data(Template_Manager, event_times, event_plots, fs)
 
 # %%
 print(event_times)
