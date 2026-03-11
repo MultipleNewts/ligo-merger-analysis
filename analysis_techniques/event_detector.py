@@ -2,10 +2,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal.windows import tukey
-from analysis_techniques.ligonoise import LIGOEvent
 from analysis_techniques.welch_method import welch
 from analysis_techniques.data_processing import whiten, bandpass
-from analysis_techniques.templateImporting import Templates
 
 
 # %%
@@ -18,8 +16,37 @@ def process_data(data, fs, freqs, PSD):
 
 # %%
 def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=4, overlap=0.75):
+    """
+    Runs through a full dataset and template matches against a set of templates,
+    any scans above a detection threshold are returned.
+
+    Parameters
+    ----------
+    full_data : `array`
+        the full dataset to be scanned
+    template_bank : `Templates`
+        a template bank Object
+    fs : `int`
+        the sampling frequency, defaults to `4096`
+    window_func : `FunctionType`
+        function pointer for window function, defaults to `tukey`
+    seg_dur : `float`
+        duration, in seconds, for Welch PSD computation
+    overlap : `float`
+        the overlap ratio for Welch PSD computation
+
+    Returns
+    -------
+    template_events : `dict`
+        dictionary containing the timestamp and the maximum inner_product for any
+        events that surpass the threshold
+    template_plots : `dict`
+        the processed data for each event detection, matches the size of the template
+    processed : `array`
+        inner product data for each event detection, mostly for debugging purposes
+    """
     # compute Welch PSD
-    freqs, PSD = welch(strain, fs, window_func, int(seg_dur*fs), overlap=overlap)
+    freqs, PSD = welch(full_data, fs, window_func, int(seg_dur*fs), overlap=overlap)
     # compute test length
     test_length = int(4*fs)
     if test_length % 2 != 0:
@@ -57,15 +84,14 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
 
         # iterates through every window segment in dataset
         for j, segment in enumerate(segments):
-            if j % 10 == 0:
-                print(f"Processing Segment {j}...")
+            # if j % 10 == 0:
+            #     print(f"Processing Segment {j}...")
             # processes each window
             proc_data = process_data(segment, fs, freqs, PSD)
             test_dur = test_length/fs
             dt = 1/fs
             times = np.linspace(-test_dur, 0, segment.shape[0])
             temp_data = np.zeros(test_length)
-            
 
             # tests against every datapoint in window
             for k in range(test_length):
@@ -91,24 +117,32 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
 
 
 # %%
-# if __name__ == "__main__":
-EventObject = LIGOEvent(200, 7)
-strain = EventObject.get_data()
-t0, dt = EventObject.get_time_vars()
-fs = 1/dt.value
+def find_best_data(template_bank, event_times, event_plots, fs=4096):
+    """
+    Takes data from `detect_events()` and finds the best fitting model for
+    the detected event (if there is one)
 
-# %%
-Template_Manager = Templates("templates/Event7TemplatesCutDown.json")
-print(Template_Manager.template_count)
-template = Template_Manager.get_template(0)
+    Parameters
+    ----------
+    template_bank : `Templates`
+        a template bank Object
+    event_times : `dict`
+        dictionary containing the timestamp and the maximum inner_product for any
+        events that surpass the threshold
+    event_plots : `dict`
+        the processed data for each event detection, matches the size of the template
+    fs : `float`
+        the sampling frequency of the data
 
-# %%
-event_times, event_plots, ip_vals = detect_events(strain, Template_Manager, fs, tukey, 4, 0.5)
-
-
-# %%
-def find_best_data(event_times, event_plots):
-def find_best_data(template_bank, event_times, event_plots, fs):
+    Returns
+    -------
+    times : `array`
+        an array containing the times of each datapoint for the best-fitting model
+    data : `array`
+        an array containing the processed data for the best-fitting model
+    model : `array`
+        an array containing the model data for the best-fitting model
+    """
     dt = 1/fs
     max_values = []
     max_pos = []
@@ -137,8 +171,6 @@ def find_best_data(template_bank, event_times, event_plots, fs):
     times = np.linspace(occurred-incr, occurred+incr, len(data))
     solM = r"$M_{\odot}$"
     plt.figure(figsize=(24, 10))
-    plt.plot(model)
-    plt.plot(data)
     plt.plot(times, model, label=f"Model: {M1}{solM}; {M2}{solM}")
     plt.plot(times, data, label="Data")
     plt.title("Best Fitting Model for Detected BH-BH Merger Event", fontsize=30)
@@ -148,16 +180,7 @@ def find_best_data(template_bank, event_times, event_plots, fs):
     plt.yticks(fontsize=20)
     plt.legend(fontsize=25)
     plt.show()
+    return (times, data, model)
 
 
-# %%
-find_best_data(event_times, event_plots)
-find_best_data(Template_Manager, event_times, event_plots, fs)
-
-# %%
-print(event_times)
-# %%
-template_count = Template_Manager.template_count
-for i in range(template_count):
-    print(Template_Manager.get_template(i).hp.shape[0])
 # %%
