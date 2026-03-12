@@ -3,6 +3,7 @@ from analysis_techniques.templateImporting import Templates
 from analysis_techniques.ligonoise import LIGOEvent
 from analysis_techniques.event_detector import detect_events, find_best_data
 from scipy.signal.windows import tukey
+# import matplotlib.pyplot as plt
 
 
 # %%
@@ -44,13 +45,13 @@ def low_snr_search(event):
 
     # Output Best Matched Model, if event in data
     results = find_best_data(Template_Manager, event_times, event_plots, fs)
-    return results
+    return results, event_times, event_plots
 
 
 # %%
 results7 = high_snr_search(EO7)
 
 # %%
-results3 = low_snr_search(EO3)
+results3, et, ep = low_snr_search(EO3)
 
 # %%

@@ -8,17 +8,18 @@ from scipy.signal.windows import tukey
 from analysis_techniques.templateImporting import Templates
 
 # %%
-EventObject = LIGOEvent(200, 7)
+EventObject = LIGOEvent(200, 3)
 strain = EventObject.get_data()
 t0, dt = EventObject.get_time_vars()
 fs = 1/dt.value
 # %%
-default = "templates/Event7Template.json"
+default = "templates/Event3FinalTemplates.json"
 BBHModel = "templates/Event7Template.json"
 IMRPhenomXo4 = "templates/Event7TemplateIMRPhenomXo4.json"
 
 Template_Manager = Templates(default)
-template = Template_Manager.get_template(0)
+
+template = Template_Manager.get_template(Template_Manager.template_count-1)
 model = template.hp[:]
 
 model_times = template.times[:]
@@ -32,7 +33,7 @@ step = 4096*2
 segment = strain[L-step:L+step]
 whitened_data = whiten(segment, fs, freqs, PSD, tukey)
 bp_data = bandpass(whitened_data, fs, order=8)
-times = np.linspace(-2, 2, segment.shape[0]) 
+times = np.linspace(-2, 2, segment.shape[0])
 # %%
 whitened_model = whiten(model, fs, freqs, PSD, tukey)
 bp_model = bandpass(whitened_model, fs, order=8)
@@ -49,7 +50,7 @@ times_cut = times[L-split:L+split]
 print(len(bp_data_cut), len(bp_model))
 # %%
 plt.figure(figsize=(24, 10))
-t0 =  -0.006772506772506792
+t0 = -0.006772506772506792
 plt.plot(model_times, bp_model)
 plt.plot(times+t0, bp_data, alpha=0.75)
 plt.xlim([-0.2, 0.2])
@@ -79,9 +80,25 @@ plt.axvline(optimal, c="r", linestyle="--", alpha=0.2)
 plt.show()
 
 # %%
+# plt.figure(figsize=(24, 10))
+# plt.plot(model_times, bp_model)
+# plt.plot(times+optimal, bp_data)
+# t_low = np.min(model_times)
+# t_high = np.max(model_times)
+# plt.xlim((t_low, t_high))
+# plt.show()
+
+solM = r"$M_{\odot}$"
+M1, M2 = (template.mass1, template.mass2)
 plt.figure(figsize=(24, 10))
-plt.plot(model_times, bp_model)
-plt.plot(times+optimal, bp_data)
+plt.plot(model_times, bp_model, label=f"Model: {M1}{solM}; {M2}{solM}")
+plt.plot(times+optimal, bp_data, label="Data")
+plt.title("Best Fitting Model for Detected BH-BH Merger Event", fontsize=30)
+plt.xlabel(r"Times ($s$)", fontsize=25)
+plt.xticks(fontsize=20)
+plt.ylabel(r"Standard Deviations ($\sigma$)", fontsize=25)
+plt.yticks(fontsize=20)
+plt.legend(fontsize=25)
 t_low = np.min(model_times)
 t_high = np.max(model_times)
 plt.xlim((t_low, t_high))
