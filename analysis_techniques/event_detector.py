@@ -93,9 +93,17 @@ def detect_events(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=
             times = np.linspace(-test_dur, 0, segment.shape[0])
             temp_data = np.zeros(test_length)
 
+            extra_times_start_point = times[-1] + dt
+            extra_times_end_point = times[-1] * (dt * test_length)
+            extra_times = np.arange(extra_times_start_point, extra_times_end_point, test_length)
+
+            total_times = np.concatenate((times, extra_times))
+            total_interp = np.interp(model_times, total_times, proc_data)
+
             # tests against every datapoint in window
             for k in range(test_length):
-                interp_data = np.interp(model_times, times+(dt*k), proc_data)
+                interp_data = total_interp[k:k+test_length]
+                # interp_data = np.interp(model_times, times+(dt*k), proc_data)
                 inner_product = np.sum(interp_data * proc_model)
                 temp_data[k] = inner_product
                 if inner_product > 300:
