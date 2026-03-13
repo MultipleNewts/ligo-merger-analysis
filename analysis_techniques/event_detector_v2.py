@@ -16,7 +16,35 @@ def process_data(data, fs, freqs, PSD):
 
 # %%
 def detect_events_v2(full_data, template_bank, fs=4096, window_func=tukey, seg_dur=4, overlap=0.75):
+    """
+    Runs through a full dataset and template matches against a set of templates,
+    any scans above a detection threshold are returned.
 
+    Parameters
+    ----------
+    full_data : `array`
+        the full dataset to be scanned
+    template_bank : `Templates`
+        a template bank Object
+    fs : `int`
+        the sampling frequency, defaults to `4096`
+    window_func : `FunctionType`
+        function pointer for window function, defaults to `tukey`
+    seg_dur : `float`
+        duration, in seconds, for Welch PSD computation
+    overlap : `float`
+        the overlap ratio for Welch PSD computation
+
+    Returns
+    -------
+    template_events : `dict`
+        dictionary containing the timestamp and the maximum inner_product for any
+        events that surpass the threshold
+    template_plots : `dict`
+        the processed data for each event detection, matches the size of the template
+    processed : `array`
+        inner product data for each event detection, mostly for debugging purposes
+    """
     # Compute PSD
     freqs, PSD = welch(full_data, fs, window_func, int(seg_dur*fs), overlap=overlap)
     dt = 1/fs
@@ -62,7 +90,9 @@ def detect_events_v2(full_data, template_bank, fs=4096, window_func=tukey, seg_d
             detection = False
 
             for i in range(indexes_to_convolve):
-                inner_product = np.sum(processed_segment[i:processed_model.shape[0] + i] * processed_model_normalised)
+                inner_product = np.sum(
+                    processed_segment[i:processed_model.shape[0] + i] * processed_model_normalised
+                    )
                 inner_products[i] = inner_product
 
                 if inner_product > (300 / 0.15):
@@ -70,8 +100,19 @@ def detect_events_v2(full_data, template_bank, fs=4096, window_func=tukey, seg_d
                     events.append(((j*step*dt + i*dt + current_model_t0), inner_product))
                     starting_t0 = j*step*dt + i*dt
                     ending_t0 = j*step*dt + (processed_model.shape[0]+i)*dt
-                    current_times = np.linspace(starting_t0, ending_t0, processed_model.shape[0], endpoint=False)
-                    plots.append((processed_segment[i:processed_model.shape[0] + i], processed_model, current_times))
+                    current_times = np.linspace(
+                        starting_t0,
+                        ending_t0,
+                        processed_model.shape[0],
+                        endpoint=False
+                        )
+                    plots.append(
+                        (
+                            processed_segment[i:processed_model.shape[0] + i],
+                            processed_model,
+                            current_times
+                            )
+                        )
 
             if detection:
                 inner_products_with_time.append((
@@ -92,7 +133,31 @@ def detect_events_v2(full_data, template_bank, fs=4096, window_func=tukey, seg_d
 # %%
 # %%
 def find_best_data_v2(template_bank, event_times, event_plots):
+    """
+    Takes data from `detect_events()` and finds the best fitting model for
+    the detected event (if there is one)
 
+    Parameters
+    ----------
+    template_bank : `Templates`
+        a template bank Object
+    event_times : `dict`
+        dictionary containing the timestamp and the maximum inner_product for any
+        events that surpass the threshold
+    event_plots : `dict`
+        the processed data for each event detection, matches the size of the template
+    fs : `float`
+        the sampling frequency of the data
+
+    Returns
+    -------
+    times : `array`
+        an array containing the times of each datapoint for the best-fitting model
+    data : `array`
+        an array containing the processed data for the best-fitting model
+    model : `array`
+        an array containing the model data for the best-fitting model
+    """
     max_values = []
     max_values_index = []
     occured_times = []
