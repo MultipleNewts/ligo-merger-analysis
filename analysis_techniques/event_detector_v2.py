@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal.windows import tukey
 from analysis_techniques.welch_method import welch
-from analysis_techniques.data_processing import whiten, bandpass
+from analysis_techniques.data_processing import whiten, bandpass, normalise
 
 
 # %%
@@ -47,6 +47,7 @@ def detect_events_v2(full_data, template_bank, fs=4096, window_func=tukey, seg_d
         current_model = current_template.hp[:]
 
         processed_model = process_data(current_model, fs, freqs, PSD)
+        processed_model_normalised = normalise(processed_model, dt)
         current_model_times = current_template.times[:]
         current_model_t0 = - current_model_times[0]
         events = []
@@ -61,10 +62,10 @@ def detect_events_v2(full_data, template_bank, fs=4096, window_func=tukey, seg_d
             detection = False
 
             for i in range(indexes_to_convolve):
-                inner_product = np.sum(processed_segment[i:processed_model.shape[0] + i] * processed_model)
+                inner_product = np.sum(processed_segment[i:processed_model.shape[0] + i] * processed_model_normalised)
                 inner_products[i] = inner_product
 
-                if inner_product > 300:
+                if inner_product > (300 / 0.15):
                     detection = True
                     events.append(((j*step*dt + i*dt + current_model_t0), inner_product))
                     starting_t0 = j*step*dt + i*dt
