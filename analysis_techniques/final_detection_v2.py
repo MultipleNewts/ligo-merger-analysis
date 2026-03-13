@@ -16,7 +16,7 @@ strain = EO3.get_data()
 t0, dt = EO3.get_time_vars()
 fs = 1/dt.value
 
-Template_Manager = Templates("templates/Event3FinalTemplates.json")
+Template_Manager = Templates("templates/Event3HigherRes.json")
 
 # %%
 event_times, event_plots, products = detect_events_v2(strain, Template_Manager, fs, tukey, 4, 0.5)
