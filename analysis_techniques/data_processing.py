@@ -84,3 +84,31 @@ def bandpass(data, fs, band_min=35, band_max=350, order=8):
         )
     filtered_data = sosfilt(sos, data)
     return filtered_data
+
+
+def normalise(data, dt, bound_by_axis=True, constant=1):
+    '''
+    Parameters
+    ---------
+    data : `array`
+        The data to normalise
+    dt : `float`
+        The time step between each data point
+    bound_by_axis : `bool`
+        Whether to normalise over the signed area, or absolute area bound by data and the time axis
+    constant : `float`
+        The desired integral of the normalised data
+        
+    Returns
+    ------
+    normalised_data : `array`
+        The input data scaled by a normalisation factor
+    '''
+    if bound_by_axis:
+        to_integrate = np.abs(data)
+    else:
+        to_integrate = data
+
+    normalisation_factor = np.sum(to_integrate) * dt
+
+    return data / normalisation_factor * constant
