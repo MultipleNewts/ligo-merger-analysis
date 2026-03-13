@@ -98,7 +98,7 @@ def normalise(data, dt, bound_by_axis=True, constant=1):
         Whether to normalise over the signed area, or absolute area bound by data and the time axis
     constant : `float`
         The desired integral of the normalised data
-        
+
     Returns
     ------
     normalised_data : `array`
