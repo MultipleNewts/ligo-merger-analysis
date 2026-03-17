@@ -61,6 +61,8 @@ def detect_events_v2(full_data, template_bank, fs=4096, window_func=tukey, seg_d
     template_plots = {}
     template_inner_products = {}
 
+
+    # Segment full stream of data into managable chunks
     max_iter = int((len(full_data) - test_length_indexes) // step) + 1
     for i in range(max_iter):
         index = int(i*step)
@@ -78,23 +80,28 @@ def detect_events_v2(full_data, template_bank, fs=4096, window_func=tukey, seg_d
         processed_model_normalised = normalise(processed_model, dt)
         current_model_times = current_template.times[:]
         current_model_t0 = - current_model_times[0]
+
         events = []
         plots = []
         inner_products_with_time = []
 
         for j, segment in enumerate(segments):
             processed_segment = process_data(segment, fs, freqs, PSD)
-            indexes_to_convolve = processed_segment.shape[0] - processed_model.shape[0]
 
+            indexes_to_convolve = processed_segment.shape[0] - processed_model.shape[0]
             inner_products = np.zeros(indexes_to_convolve)
+
             detection = False
 
+            # Slide template over the entire stretch of each segment
             for i in range(indexes_to_convolve):
                 inner_product = np.sum(
                     processed_segment[i:processed_model.shape[0] + i] * processed_model_normalised
                     )
+                
                 inner_products[i] = inner_product
 
+                # Arbitrary detection threshold from visualisation
                 if inner_product > (300 / 0.15):
                     detection = True
                     events.append(((j*step*dt + i*dt + current_model_t0), inner_product))
@@ -113,7 +120,7 @@ def detect_events_v2(full_data, template_bank, fs=4096, window_func=tukey, seg_d
                             current_times
                             )
                         )
-
+            # Save data if a match is located within current segment
             if detection:
                 inner_products_with_time.append((
                     np.linspace(
@@ -124,6 +131,8 @@ def detect_events_v2(full_data, template_bank, fs=4096, window_func=tukey, seg_d
                     ),
                     inner_products
                 ))
+        
+        # Save results for each template
         template_events["Template " + str(t)] = events
         template_plots["Template "+str(t)] = plots
         template_inner_products["Template " + str(t)] = inner_products_with_time
